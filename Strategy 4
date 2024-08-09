@@ -1,0 +1,23 @@
+//@version=5
+strategy("MACD Strategy", overlay=true)
+
+ 
+fastLength = 12
+slowLength = 26
+signalLength = 9
+
+ 
+[macdLine, signalLine, _] = ta.macd(close, fastLength, slowLength, signalLength)
+histogram = macdLine - signalLine
+
+ 
+plot(macdLine, color=color.blue, title="MACD Line")
+plot(signalLine, color=color.red, title="Signal Line")
+hline(0, "Zero Line", color=color.gray)
+
+ 
+if ta.crossover(macdLine, signalLine)
+    strategy.entry("Buy", strategy.long)
+
+if ta.crossunder(macdLine, signalLine)
+    strategy.close("Buy")
