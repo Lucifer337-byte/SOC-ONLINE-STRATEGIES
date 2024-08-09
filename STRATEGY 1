@@ -1,0 +1,17 @@
+//@version=5
+strategy("MA Crossover Strategy", overlay=true)
+
+ 
+shortMA = ta.sma(close, 50)
+longMA = ta.sma(close, 200)
+
+ 
+plot(shortMA, color=color.blue, title="50-period SMA")
+plot(longMA, color=color.red, title="200-period SMA")
+
+ 
+if ta.crossover(shortMA, longMA)
+    strategy.entry("Buy", strategy.long)
+    
+if ta.crossunder(shortMA, longMA)
+    strategy.close("Buy")
