@@ -1,10 +1,9 @@
-// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// © VSPuzzler
+
 
 //@version=5
 indicator("Market Sentiment Dashboard", "", true)
 
-// Define variables for panel display settings
+ 
 var string displaySettings = "Display"
 string tableYpos = input.string("top", "Panel Position", inline = "position", options = ["top", "middle", "bottom"], group = displaySettings)
 string tableXpos = input.string("right", "", inline = "position", options = ["left", "center", "right"], group = displaySettings)
