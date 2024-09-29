@@ -1,22 +1,80 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © VSPuzzler
+
 //@version=5
-strategy("RSI Strategy", overlay=true)
+indicator("Market Sentiment Dashboard", "", true)
 
- 
-rsiPeriod = 14
-overbought = 70
-oversold = 30
+// Define variables for panel display settings
+var string displaySettings = "Display"
+string tableYpos = input.string("top", "Panel Position", inline = "position", options = ["top", "middle", "bottom"], group = displaySettings)
+string tableXpos = input.string("right", "", inline = "position", options = ["left", "center", "right"], group = displaySettings)
+color bullColor = input.color(color.new(color.green, 30), "Bullish Color", inline = "colors", group = displaySettings)
+color bearColor = input.color(color.new(color.red, 30), "Bearish Color", inline = "colors", group = displaySettings)
+color neutralColor = input.color(color.new(color.gray, 30), "Neutral Color", inline = "colors", group = displaySettings)
+color textColor = input.color(color.new(color.black, 30), "Text Color", inline = "colors", group = displaySettings)
+string labelSize = input.string("default", title="Label Size", options=["very small", "small", "default", "large", "very large"])
+labelSizeOption = switch labelSize
+    "very small" => size.tiny
+    "small" => size.small
+    "default" => size.normal
+    "large" => size.large
+    "very large" => size.huge
 
- 
-rsi = ta.rsi(close, rsiPeriod)
+// Create table for displaying market sentiment
+var table dashboard = table.new(tableYpos + "_" + tableXpos, 2, 11)
 
- 
-hline(overbought, "Overbought", color=color.red)
-hline(oversold, "Oversold", color=color.green)
-plot(rsi, color=color.blue, title="RSI")
+// Function to get market sentiment based on EMA
+getSentiment(tf) =>
+    ema9 = request.security(syminfo.tickerid, tf, ta.ema(close, 9))
+    sentiment = ema9 > ema9[2] ? "Bullish" : ema9 < ema9[2] ? "Bearish" : "Neutral"
+    sentiment
 
- 
-if rsi < oversold
-    strategy.entry("Buy", strategy.long)
+// Calculate sentiment for multiple timeframes
+sentiment1 = request.security(syminfo.tickerid, "1", getSentiment("1"))
+sentiment3 = request.security(syminfo.tickerid, "3", getSentiment("3"))
+sentiment5 = request.security(syminfo.tickerid, "5", getSentiment("5"))
+sentiment15 = request.security(syminfo.tickerid, "15", getSentiment("15"))
+sentiment30 = request.security(syminfo.tickerid, "30", getSentiment("30"))
+sentiment60 = request.security(syminfo.tickerid, "60", getSentiment("60"))
+sentiment240 = request.security(syminfo.tickerid, "240", getSentiment("240"))
+sentimentD = request.security(syminfo.tickerid, "D", getSentiment("D"))
 
-if rsi > overbought
-    strategy.close("Buy")
+// Function to get color based on market sentiment
+getColor(marketCondition) =>
+    if marketCondition == "Bullish"
+        bullColor
+    else if marketCondition == "Bearish"
+        bearColor
+    else
+        neutralColor
+
+// Populate the dashboard table with sentiment data
+table.cell(dashboard, 0, 1, "Volume", text_size=labelSizeOption, bgcolor = neutralColor, text_color = textColor)
+table.cell(dashboard, 1, 1, str.tostring(volume), text_size=labelSizeOption, bgcolor = neutralColor, text_color = textColor)
+table.cell(dashboard, 0, 2, "Timeframe", text_size=labelSizeOption, bgcolor = neutralColor, text_color = textColor)
+table.cell(dashboard, 1, 2, "Trends", text_size=labelSizeOption, bgcolor = neutralColor, text_color = textColor)
+
+// Define arrays for timeframes and sentiments
+var string[] timeframes = array.new_string(8)
+array.set(timeframes, 0, "1 min:")
+array.set(timeframes, 1, "3 min:")
+array.set(timeframes, 2, "5 min:")
+array.set(timeframes, 3, "15 min:")
+array.set(timeframes, 4, "30 min:")
+array.set(timeframes, 5, "1 H:")
+array.set(timeframes, 6, "4 H:")
+array.set(timeframes, 7, "1 D:")
+
+var string[] sentiments = array.new_string(8)
+array.set(sentiments, 0, sentiment1)
+array.set(sentiments, 1, sentiment3)
+array.set(sentiments, 2, sentiment5)
+array.set(sentiments, 3, sentiment15)
+array.set(sentiments, 4, sentiment30)
+array.set(sentiments, 5, sentiment60)
+array.set(sentiments, 6, sentiment240)
+array.set(sentiments, 7, sentimentD)
+
+for i = 0 to array.size(timeframes) - 1
+    table.cell(dashboard, 0, i + 3, array.get(timeframes, i), text_size=labelSizeOption, bgcolor = neutralColor, text_color = textColor)
+    table.cell(dashboard, 1, i + 3, array.get(sentiments, i), text_size=labelSizeOption, bgcolor = getColor(array.get(sentiments, i)), text_color = textColor)
